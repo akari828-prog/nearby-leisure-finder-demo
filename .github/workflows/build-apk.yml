@@ -32,7 +32,6 @@ jobs:
     timeout-minutes: 40
     env:
       BUILD_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'mock' }}
-      NEARBY_DEBUG_KEYSTORE: ${{ runner.temp }}/nearby-debug.keystore
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -43,6 +42,7 @@ jobs:
         env:
           FIREBASE_GOOGLE_SERVICES_JSON: ${{ secrets.FIREBASE_GOOGLE_SERVICES_JSON }}
           ANDROID_DEBUG_KEYSTORE_BASE64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_BASE64 }}
+          NEARBY_DEBUG_KEYSTORE: ${{ runner.temp }}/nearby-debug.keystore
         run: |
           python3 - <<'PY'
           import base64
@@ -76,6 +76,8 @@ jobs:
                   "-dname", "CN=Android Debug,O=Android,C=JP", "-noprompt",
               ], check=True)
           key_path.chmod(0o600)
+          with Path(os.environ["GITHUB_ENV"]).open("a", encoding="utf-8") as environment:
+              environment.write(f"NEARBY_DEBUG_KEYSTORE={key_path}\n")
           print("ビルドモードと署名設定を確認しました。")
           PY
 
@@ -194,3 +196,6 @@ jobs:
         if: always()
         run: |
           rm -f app/firebase-build-config.json app/android/app/google-services.json
+          if [ -n "$NEARBY_DEBUG_KEYSTORE" ]; then
+            rm -f "$NEARBY_DEBUG_KEYSTORE"
+          fi
