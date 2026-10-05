@@ -1,12 +1,18 @@
 # PCなし・課金なしでAndroidに入れる手順
 
-この説明書の時点ではAPKはまだ生成されていません。Flutterプロジェクトとクラウドビルドの準備を完了しています。
+デモAPKを生成して公開しました。flutter pub get、flutter analyze、flutter build apk --release、APK署名検証は成功しています。実機での起動確認とFirebaseを使う実検索はこれからです。
+
+ダウンロードページ：https://github.com/akari828-prog/nearby-leisure-finder-demo/releases/tag/android-mock-37259913248-1
+
+ページの Assets にある **nearby-leisure-mock.apk** をスマホで開いてください。
 
 ## 最初の確認
 
-公開GitHubリポジトリの標準ランナーでビルドし、生成したAPKをGitHub Releasesで配布する構成です。アプリのソースとテスト用APKは公開されます。公開の許可を得た後に、新しいリポジトリを作成してビルドします。
+ユーザーの許可を得て公開リポジトリを作成し、標準ランナーでビルドしました。アプリの完全なソースZIPと端末確認用APKは公開されています。
 
-GitHubのリポジトリ作成とSecrets登録にはブラウザ操作が必要です。GitHubのログインが必要になった場合は本人の操作で認証します。GitHubの有料ランナー、Codespaces、Actionsのキャッシュや成果物ストレージは使いません。
+リポジトリ：https://github.com/akari828-prog/nearby-leisure-finder-demo
+
+GitHubとFirebaseへのログインは確認済みです。Firebaseのプロジェクト作成画面を準備していますが、利用規約への本人の同意待ちです。GitHub Secretsへの設定登録と実検索版の生成は、その設定後に進めます。GitHubの有料ランナー、Codespaces、Actionsのキャッシュや成果物ストレージは使いません。
 
 ## 無料のGeminiで実際のイベントを検索する準備
 
@@ -28,6 +34,8 @@ GitHubのリポジトリ作成とSecrets登録にはブラウザ操作が必要�
    ~~~text
    4B:A0:A8:D9:E7:14:3A:E5:F5:93:9B:BB:44:58:B7:8A:57:C1:C1:9D:C7:2C:72:F4:D5:6F:72:1D:C8:B7:A9:95
    ~~~
+
+公開したデモAPKは一時的な署名鍵で作成しています。上記の固定鍵のフィンガープリントとは異なります。実検索版へ切り替える前に固定鍵をGitHub Secretsへ登録し、デモAPKをアンインストールしてから実検索APKを入れてください。
 
 7. App CheckのAndroidプロバイダは **Play Integrity** を使います。APKを直接配布する場合は、公式資料の「Google Play以外に限定」に合わせ、**PLAY_RECOGNIZED不要、LICENSED不要、デバイスの完全性を要求**する設定を使います。Google Play Console側でのAPI・Cloudプロジェクトの設定が必要になる場合があります。無料での設定が完了しない場合は、課金手続きをせず、その画面で停止して確認します。
 8. 実機からApp Checkの有効なリクエストが届くことを確認し、Firebase AI LogicのApp Check適用を有効にします。公開配布前に未登録端末からのアクセスが拒否されることも確認します。
