@@ -32,6 +32,7 @@ jobs:
     timeout-minutes: 40
     env:
       BUILD_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'mock' }}
+      NEARBY_DEBUG_KEYSTORE: ${{ runner.temp }}/nearby-debug.keystore
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -46,6 +47,7 @@ jobs:
           python3 - <<'PY'
           import base64
           import os
+          import subprocess
           from pathlib import Path
 
           mode = os.environ["BUILD_MODE"]
@@ -55,9 +57,9 @@ jobs:
           key_base64 = os.environ.get("ANDROID_DEBUG_KEYSTORE_BASE64", "")
           if mode == "live" and (not firebase_json.strip() or not key_base64.strip()):
               raise SystemExit("実検索版にはFirebase登録情報と固定署名鍵のSecrets設定が必要です。")
+          key_path = Path(os.environ["NEARBY_DEBUG_KEYSTORE"])
+          key_path.parent.mkdir(parents=True, exist_ok=True)
           if key_base64.strip():
-              key_path = Path.home() / ".android" / "debug.keystore"
-              key_path.parent.mkdir(parents=True, exist_ok=True)
               try:
                   key_bytes = base64.b64decode("".join(key_base64.split()), validate=True)
               except ValueError:
@@ -65,7 +67,15 @@ jobs:
               if not key_bytes:
                   raise SystemExit("署名鍵が空です。")
               key_path.write_bytes(key_bytes)
-              key_path.chmod(0o600)
+          else:
+              subprocess.run([
+                  "keytool", "-genkeypair", "-keystore", str(key_path),
+                  "-storetype", "JKS", "-storepass", "android",
+                  "-keypass", "android", "-alias", "androiddebugkey",
+                  "-keyalg", "RSA", "-keysize", "2048", "-validity", "10000",
+                  "-dname", "CN=Android Debug,O=Android,C=JP", "-noprompt",
+              ], check=True)
+          key_path.chmod(0o600)
           print("ビルドモードと署名設定を確認しました。")
           PY
 
@@ -121,9 +131,32 @@ jobs:
         working-directory: app
         run: flutter build apk --release --build-number="$GITHUB_RUN_NUMBER" --dart-define-from-file=firebase-build-config.json
 
-      - name: Record public signing certificate information
+      - name: Verify APK and record public signing certificate information
         run: |
-          keytool -list -v -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey > app/SIGNING_INFO.txt
+          python3 - <<'PY'
+          import os
+          import re
+          import subprocess
+          from pathlib import Path
+
+          sdk_directory = os.environ.get("ANDROID_HOME") or os.environ.get("ANDROID_SDK_ROOT")
+          if not sdk_directory:
+              raise SystemExit("Android SDKの場所を確認できません。")
+          signers = list((Path(sdk_directory) / "build-tools").glob("*/apksigner"))
+          if not signers:
+              raise SystemExit("APKの署名検証ツールが見つかりません。")
+          signer = max(signers, key=lambda path: tuple(int(part) for part in re.findall(r"\d+", path.parent.name)))
+          result = subprocess.run([
+              str(signer), "verify", "--verbose", "--print-certs",
+              "app/build/app/outputs/flutter-apk/app-release.apk",
+          ], capture_output=True, text=True)
+          print(result.stdout, end="")
+          if result.stderr:
+              print(result.stderr, end="")
+          if result.returncode != 0:
+              raise SystemExit(result.returncode)
+          Path("app/SIGNING_INFO.txt").write_text(result.stdout, encoding="utf-8")
+          PY
 
       - name: Publish APK for phone download
         env:
