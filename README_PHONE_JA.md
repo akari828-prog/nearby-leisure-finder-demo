@@ -2,7 +2,7 @@
 
 デモAPKを生成して公開しました。flutter pub get、flutter analyze、flutter build apk --release、APK署名検証は成功しています。実機での起動確認とFirebaseを使う実検索はこれからです。
 
-ダウンロードページ：https://github.com/akari828-prog/nearby-leisure-finder-demo/releases/tag/android-mock-37259913248-1
+ダウンロードページ：https://github.com/akari828-prog/nearby-leisure-finder-demo/releases/tag/android-mock-37264135261-1
 
 ページの Assets にある **nearby-leisure-mock.apk** をスマホで開いてください。
 
@@ -12,7 +12,11 @@
 
 リポジトリ：https://github.com/akari828-prog/nearby-leisure-finder-demo
 
-GitHubとFirebaseへのログインは確認済みです。Firebaseのプロジェクト作成画面を準備していますが、利用規約への本人の同意待ちです。GitHub Secretsへの設定登録と実検索版の生成は、その設定後に進めます。GitHubの有料ランナー、Codespaces、Actionsのキャッシュや成果物ストレージは使いません。
+Firebaseプロジェクト **Nearby Leisure Finder**（ID: **nearby-leisure-finder**）をSparkプランで作成しました。Androidアプリ **jp.example.nearbyleisurefinder** と固定署名のSHA-1・SHA-256を登録済みです。固定署名鍵はGitHubの非公開Repository secret **ANDROID_DEBUG_KEYSTORE_BASE64** に登録しました。
+
+実検索版には、Gemini API追加利用規約とPlay Integrity API利用規約への本人の同意、および **google-services.json** が必要です。このブラウザでは設定ファイルのダウンロードが完了しなかったため、スマホのFirebase設定画面から取得してChatGPTへ添付できます。Google Cloudコンソールもこのブラウザからは利用できませんでした。補助Webアプリの登録は行っていません。
+
+GitHubの有料ランナー、Codespaces、Actionsのキャッシュや成果物ストレージは使いません。
 
 ## 無料のGeminiで実際のイベントを検索する準備
 
@@ -35,12 +39,14 @@ GitHubとFirebaseへのログインは確認済みです。Firebaseのプロジ�
    4B:A0:A8:D9:E7:14:3A:E5:F5:93:9B:BB:44:58:B7:8A:57:C1:C1:9D:C7:2C:72:F4:D5:6F:72:1D:C8:B7:A9:95
    ~~~
 
-公開したデモAPKは一時的な署名鍵で作成しています。上記の固定鍵のフィンガープリントとは異なります。実検索版へ切り替える前に固定鍵をGitHub Secretsへ登録し、デモAPKをアンインストールしてから実検索APKを入れてください。
+最新のデモAPK（ビルド5）は上記の固定鍵で署名しました。apksignerで証明書の一致を確認しています。ビルド4のデモAPKは一時的な別の署名鍵を使っているため、ビルド4をインストール済みの場合は、先にアンインストールしてからビルド5を入れてください。これから生成する実検索APKにも同じ固定鍵を使います。
 
 7. App CheckのAndroidプロバイダは **Play Integrity** を使います。APKを直接配布する場合は、公式資料の「Google Play以外に限定」に合わせ、**PLAY_RECOGNIZED不要、LICENSED不要、デバイスの完全性を要求**する設定を使います。Google Play Console側でのAPI・Cloudプロジェクトの設定が必要になる場合があります。無料での設定が完了しない場合は、課金手続きをせず、その画面で停止して確認します。
-8. 実機からApp Checkの有効なリクエストが届くことを確認し、Firebase AI LogicのApp Check適用を有効にします。公開配布前に未登録端末からのアクセスが拒否されることも確認します。
+8. 今回のFirebase AI Logic開始画面では、App Checkが自動的に適用されると表示されています。実検索前にPlay Integrityプロバイダ登録を完了し、実機からApp Checkの有効なリクエストが届くことを確認します。公開配布前に未登録端末からのアクセスが拒否されることも確認します。
 
 FirebaseのAndroid APIキーはFirebaseプロジェクトの識別情報で、サービスアカウント秘密鍵やGemini APIキーとは異なります。このアプリはGemini APIキーをDartへ埋め込みません。Firebaseの設定ファイルはGitHub Secretsで渡し、ソースへコミットしません。
+
+Gemini APIの利用規約では18歳以上向けの利用が求められます。無料枠で送信したRSS情報とAIの回答は、Googleの製品改善や学習、人による確認の対象となる場合があります。このアプリがGeminiへ送るのは公開RSSのイベント情報です。ユーザーの現在地の緯度・経度は送信しません。
 
 ## ビルドからインストール
 

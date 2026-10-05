@@ -4,11 +4,11 @@
 
 公開リポジトリを作成し、デモAPKを生成しました。依存取得、flutter analyze（指摘0件）、リリースAPK生成、apksignerでの署名検証、GitHub Releasesへの公開が成功しています。
 
-**APKのダウンロードページ**：https://github.com/akari828-prog/nearby-leisure-finder-demo/releases/tag/android-mock-37259913248-1
+**APKのダウンロードページ**：https://github.com/akari828-prog/nearby-leisure-finder-demo/releases/tag/android-mock-37264135261-1
 
 **リポジトリ**：https://github.com/akari828-prog/nearby-leisure-finder-demo
 
-Firebaseプロジェクトは利用規約への本人の同意待ちです。実検索APKは未生成で、実機起動は未確認です。
+Firebaseプロジェクト **nearby-leisure-finder** をSparkプランで作成し、Androidアプリと固定署名のフィンガープリントを登録しました。固定署名鍵のGitHub Secretも登録済みです。実検索APKは未生成で、実機起動は未確認です。実検索の設定にはGemini APIとPlay Integrity APIの追加規約への本人の同意、およびFirebaseのAndroid構成ファイルが必要です。
 
 ## 課金を避ける設定
 
