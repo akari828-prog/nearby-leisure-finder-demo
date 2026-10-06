@@ -1,42 +1,43 @@
-# PCなし・無料で使うAndroidイベント検索アプリ
+# PCなし・無料のAndroidビルド
 
-## 最新版
+## 現在の状態
 
-実検索版 Android APK（ビルド #6）を公開しました。Firebase AI Logic の Gemini、RSS検索、位置情報検索を含みます。
+Gemini Developer APIの現行利用規約に合わせ、Geminiを利用していた実検索APKの配布を停止しました。公開中の旧APKはリリースから削除しています。現在、Firebase・Gemini・請求先設定を必要としないRSS＋端末内キーワード判定版をビルドしています。
 
-[APKをダウンロード](https://github.com/akari828-prog/nearby-leisure-finder-demo/releases/tag/android-live-37393697758-1) — Assets の **nearby-leisure-live.apk** を選んでください。
+## 何が必要か
 
-SHA-256: `c34ba49f85f5bdba0b63753e201ccf3de007a61b45c135f0ba3c46b922685724`
+- Androidスマートフォンとブラウザー
+- GitHubアカウント（このリポジトリの操作）
+- 支払い方法、Firebase登録、APIキーは不要
 
-## インストール
+公開リポジトリのGitHub ActionsがFlutter依存取得、静的解析、テスト、Release APK生成、署名検証を実行します。APKはGitHub Releasesに登録され、スマートフォンからダウンロードできます。
 
-1. Androidスマートフォンで上のAPKページを開きます。
-2. Assetsの **nearby-leisure-live.apk** をダウンロードし、ファイルを開きます。
-3. Androidが確認を求めた場合は、APKを開いたブラウザーまたはファイルアプリにインストールを許可します。
-4. 「インストール」を押します。位置情報はアプリ内で「現在地から探す」を押した時だけ求められます。
+## ビルドの種類
 
-ビルド4のデモAPKは別の署名鍵を使っているため、これをインストールしている場合は削除してからビルド6を入れてください。ビルド5以降は同じ固定署名鍵で更新できます。
+Build free Android APK ワークフローには2種類あります。
 
-## 確認済み
+- free: RSSから実在候補を取得し、端末内キーワード判定で分類します。
+- demo: 東京駅を基準に固定サンプルを表示します。実際に開催されるイベントではありません。
 
-- `flutter pub get` と `flutter analyze` が成功し、解析指摘はありません。
-- 実検索版のRelease APKをビルドし、APK署名（v2）を検証しました。登録済みFirebase証明書とSHA-1・SHA-256が一致します。
-- Google公式テスト広告IDを使います。
-- 実機へのインストールと起動はまだ確認していません。
+ソースZIP、SHA-256、またはワークフローを更新すると無料版ビルドが自動で開始します。手動実行時は free を選びます。成功した最新APKは [Releases](https://github.com/akari828-prog/nearby-leisure-finder-demo/releases) に **Android free build** として表示されます。
 
-## 無料設定
+## ソースの設定箇所
 
-FirebaseはSparkプラン（$0）で、Cloud Billingの請求先は登録していません。AIはFirebase AI LogicのGemini Developer API経由で、初期モデルは `gemini-3.5-flash-lite` です。このモデルのテキスト入力・出力には無料枠があります。上限に達した時は検索エラーになり、自動で有料プランへ移行しません。Firebaseの有料プランや支払い情報は設定していません。
+- RSSと地域検索語: lib/config/app_config.dart
+- 遊びイベントの分類語: lib/services/local_event_classifier.dart
+- Google公式テスト広告ユニットID: lib/config/ad_config.dart
+- Google公式テストAdMob App ID: android/app/build.gradle.kts
 
-GitHub Actionsは公開リポジトリ用の標準Ubuntuランナーで実行します。有料ランナー、Codespaces、Actionsキャッシュ、成果物ストレージは使わず、APKはGitHub Releasesに公開しています。
+Geminiモデル設定、Firebase AI Logic、App Check、Googleサービス設定ファイルは無料版では使いません。Gemini Developer APIの現行追加利用規約は消費者向けアプリでの利用を認めていないためです。
 
-## 位置情報とAI送信
+## 手元でFlutter実行できる場合
 
-位置情報は検索ボタンを押した時だけ取得し、距離計算は端末内で行います。Geminiへ送るのは公開RSSのイベント情報で、利用者の緯度・経度は送信しません。無料枠の入力内容と応答は、Googleによる確認やモデル改善の対象になることがあります。Gemini APIの利用条件に合わせ、成人向けの利用を想定しています。
+~~~sh
+flutter pub get
+flutter analyze
+flutter test
+flutter run
+flutter build apk
+~~~
 
-## ソース
-
-- [完全なFlutterプロジェクトZIP](https://github.com/akari828-prog/nearby-leisure-finder-demo/blob/main/nearby_leisure_finder_flutter.zip)
-- [スマホ向け手順](https://github.com/akari828-prog/nearby-leisure-finder-demo/blob/main/README_PHONE_JA.md)
-- [ビルド設定と費用の説明](https://github.com/akari828-prog/nearby-leisure-finder-demo/blob/main/README_FREE_BUILD_JA.md)
-- [APKビルド履歴](https://github.com/akari828-prog/nearby-leisure-finder-demo/actions/workflows/build-apk.yml)
+実検索では位置情報を検索時だけ取得します。Google News RSSの検索には市区町村などのおおまかな地域名が含まれます。GPS座標は端末内の距離計算に使います。

@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "mock=デモ / live=現在地とGeminiで実検索"
+        description: "free=RSS実検索（端末内分類） / demo=サンプル表示"
         required: true
-        default: mock
+        default: free
         type: choice
         options:
-          - mock
-          - live
+          - free
+          - demo
   push:
     paths:
       - nearby_leisure_finder_flutter.zip
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     env:
-      BUILD_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'mock' }}
+      BUILD_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'free' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -40,7 +40,6 @@ jobs:
 
       - name: Prepare build mode and signing key
         env:
-          FIREBASE_GOOGLE_SERVICES_JSON: ${{ secrets.FIREBASE_GOOGLE_SERVICES_JSON }}
           ANDROID_DEBUG_KEYSTORE_BASE64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_BASE64 }}
           NEARBY_DEBUG_KEYSTORE: ${{ runner.temp }}/nearby-debug.keystore
         run: |
@@ -51,12 +50,9 @@ jobs:
           from pathlib import Path
 
           mode = os.environ["BUILD_MODE"]
-          if mode not in {"mock", "live"}:
+          if mode not in {"demo", "free"}:
               raise SystemExit("ビルドモードが不正です。")
-          firebase_json = os.environ.get("FIREBASE_GOOGLE_SERVICES_JSON", "")
           key_base64 = os.environ.get("ANDROID_DEBUG_KEYSTORE_BASE64", "")
-          if mode == "live" and (not firebase_json.strip() or not key_base64.strip()):
-              raise SystemExit("実検索版にはFirebase登録情報と固定署名鍵のSecrets設定が必要です。")
           key_path = Path(os.environ["NEARBY_DEBUG_KEYSTORE"])
           key_path.parent.mkdir(parents=True, exist_ok=True)
           if key_base64.strip():
@@ -101,20 +97,6 @@ jobs:
           unzip -q nearby_leisure_finder_flutter.zip -d app
           chmod +x app/android/gradlew
 
-      - name: Prepare Firebase configuration for live search
-        if: env.BUILD_MODE == 'live'
-        env:
-          FIREBASE_GOOGLE_SERVICES_JSON: ${{ secrets.FIREBASE_GOOGLE_SERVICES_JSON }}
-        run: |
-          python3 - <<'PY'
-          import os
-          from pathlib import Path
-          destination = Path("app/android/app/google-services.json")
-          destination.write_text(os.environ["FIREBASE_GOOGLE_SERVICES_JSON"], encoding="utf-8")
-          destination.chmod(0o600)
-          PY
-          python3 app/tool/prepare_firebase_config.py --input app/android/app/google-services.json --output app/firebase-build-config.json
-
       - name: Install Dart dependencies
         working-directory: app
         run: flutter pub get
@@ -123,15 +105,19 @@ jobs:
         working-directory: app
         run: flutter analyze --no-pub
 
-      - name: Build mock APK
-        if: env.BUILD_MODE == 'mock'
+      - name: Test on-device event classification
+        working-directory: app
+        run: flutter test --no-pub
+
+      - name: Build demo APK
+        if: env.BUILD_MODE == 'demo'
         working-directory: app
         run: flutter build apk --release --build-number="$GITHUB_RUN_NUMBER" --dart-define=MOCK_MODE=true
 
-      - name: Build live search APK
-        if: env.BUILD_MODE == 'live'
+      - name: Build free RSS search APK
+        if: env.BUILD_MODE == 'free'
         working-directory: app
-        run: flutter build apk --release --build-number="$GITHUB_RUN_NUMBER" --dart-define-from-file=firebase-build-config.json
+        run: flutter build apk --release --build-number="$GITHUB_RUN_NUMBER" --dart-define=MOCK_MODE=false
 
       - name: Verify APK and record public signing certificate information
         run: |
@@ -175,27 +161,26 @@ jobs:
           checksum = hashlib.sha256(apk.read_bytes()).hexdigest()
           Path("app/APK_SHA256.txt").write_text(f"{checksum}  {apk.name}\n", encoding="utf-8")
           description = (
-              "現在地、RSS、Geminiの実検索版です。FirebaseとApp Checkの登録が必要です。"
-              if mode == "live" else
-              "表示・距離・広告・ブラウザ遷移のデモ版です。実在の開催情報ではありません。"
+              "現在地、RSS、端末内のキーワード分類でイベント候補を検索します。Firebase、Gemini API、APIキーは使いません。"
+              if mode == "free" else
+              "表示・距離・広告・ブラウザ遷移のデモ版です。表示するサンプルは実在イベントではありません。"
           )
           notes = (
-              "Android専用の端末確認用APKです。\n\n"
+              "Android向けの端末確認用APKです。\n\n"
               + description
               + "\n\nGoogle公式テスト広告IDを使用します。\n\n"
-              + "APKをAndroidのブラウザでダウンロードして開くとインストールできます。"
+              + "APKをAndroidのブラウザーでダウンロードして開くとインストールできます。"
               + "Androidが求めた場合は、APKを開いたアプリのインストール権限を許可してください。\n\n"
-              + "SIGNING_INFO.txtには登録用の公開証明書情報、APK_SHA256.txtにはファイル確認用ハッシュがあります。\n"
+              + "SIGNING_INFO.txtには公開署名証明書の情報、APK_SHA256.txtにはファイル確認用ハッシュがあります。\n"
           )
           Path("app/RELEASE_NOTES_JA.md").write_text(notes, encoding="utf-8")
           PY
           release_tag="android-${BUILD_MODE}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           gh release create "$release_tag" "$apk_path" app/SIGNING_INFO.txt app/APK_SHA256.txt --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Android ${BUILD_MODE} build ${GITHUB_RUN_NUMBER}" --notes-file app/RELEASE_NOTES_JA.md --prerelease
 
-      - name: Remove temporary build configuration
+      - name: Remove temporary signing key
         if: always()
         run: |
-          rm -f app/firebase-build-config.json app/android/app/google-services.json
           if [ -n "$NEARBY_DEBUG_KEYSTORE" ]; then
             rm -f "$NEARBY_DEBUG_KEYSTORE"
           fi

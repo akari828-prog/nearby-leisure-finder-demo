@@ -1,42 +1,31 @@
-# PCなし・無料で使うAndroidイベント検索アプリ
+# 近くで、ちょっと遊ぼう。
 
-## 最新版
+現在地の近くで遊び・レジャーのイベント候補を探すAndroidアプリです。スマートフォンだけで入れられるAPKをGitHub Actionsでビルドします。
 
-実検索版 Android APK（ビルド #6）を公開しました。Firebase AI Logic の Gemini、RSS検索、位置情報検索を含みます。
+## 配布状況
 
-[APKをダウンロード](https://github.com/akari828-prog/nearby-leisure-finder-demo/releases/tag/android-live-37393697758-1) — Assets の **nearby-leisure-live.apk** を選んでください。
+以前のGemini実検索版は配布を停止しました。Gemini Developer APIの現行追加利用規約が一般消費者向けアプリでの利用を認めていないためです。古い「mock」版も実際の開催情報を表示しません。
 
-SHA-256: `c34ba49f85f5bdba0b63753e201ccf3de007a61b45c135f0ba3c46b922685724`
+現在、Firebase・Gemini・APIキー・支払い設定を使わない無料版へ切り替えています。RSSの情報を端末内のキーワードで判定して距離順に表示します。ビルドが完了すると、[Releases](https://github.com/akari828-prog/nearby-leisure-finder-demo/releases) に **Android free build** が現れます。ここにAPKがまだ表示されない間は、新しいビルドの準備中です。
 
-## インストール
+## スマートフォンへのインストール
 
-1. Androidスマートフォンで上のAPKページを開きます。
-2. Assetsの **nearby-leisure-live.apk** をダウンロードし、ファイルを開きます。
-3. Androidが確認を求めた場合は、APKを開いたブラウザーまたはファイルアプリにインストールを許可します。
-4. 「インストール」を押します。位置情報はアプリ内で「現在地から探す」を押した時だけ求められます。
+1. スマートフォンで [Releases](https://github.com/akari828-prog/nearby-leisure-finder-demo/releases) を開きます。
+2. 最新の **Android free build** を選びます。
+3. nearby-leisure-free.apk をダウンロードして開き、Androidの案内に従ってインストールします。
 
-ビルド4のデモAPKは別の署名鍵を使っているため、これをインストールしている場合は削除してからビルド6を入れてください。ビルド5以降は同じ固定署名鍵で更新できます。
+実機でのインストールと起動は確認前のため、確認状況はリリース説明に記載します。デモ版や「配布停止」と表示されたAPKは実検索版ではありません。
 
-## 確認済み
+## 無料版の機能
 
-- `flutter pub get` と `flutter analyze` が成功し、解析指摘はありません。
-- 実検索版のRelease APKをビルドし、APK署名（v2）を検証しました。登録済みFirebase証明書とSHA-1・SHA-256が一致します。
-- Google公式テスト広告IDを使います。
-- 実機へのインストールと起動はまだ確認していません。
+- RSSの公開情報から最大10件のイベント候補を取得
+- 祭り、マルシェ、展示、観光などのキーワードを端末内で判定
+- RSSに書かれた住所だけをジオコーディングし、10km以内を距離順で表示
+- GPSは検索を押した時だけ取得し、距離計算は端末内で実行
+- Google公式テスト広告を使用し、3回目ごとのタップだけ広告表示対象
 
-## 無料設定
+キーワード判定には誤判定や見逃しがあります。RSSに場所や日時が書かれていない場合は補いません。RSS提供元の利用条件に従い、元記事リンクと短い説明を表示します。
 
-FirebaseはSparkプラン（$0）で、Cloud Billingの請求先は登録していません。AIはFirebase AI LogicのGemini Developer API経由で、初期モデルは `gemini-3.5-flash-lite` です。このモデルのテキスト入力・出力には無料枠があります。上限に達した時は検索エラーになり、自動で有料プランへ移行しません。Firebaseの有料プランや支払い情報は設定していません。
+## 開発情報
 
-GitHub Actionsは公開リポジトリ用の標準Ubuntuランナーで実行します。有料ランナー、Codespaces、Actionsキャッシュ、成果物ストレージは使わず、APKはGitHub Releasesに公開しています。
-
-## 位置情報とAI送信
-
-位置情報は検索ボタンを押した時だけ取得し、距離計算は端末内で行います。Geminiへ送るのは公開RSSのイベント情報で、利用者の緯度・経度は送信しません。無料枠の入力内容と応答は、Googleによる確認やモデル改善の対象になることがあります。Gemini APIの利用条件に合わせ、成人向けの利用を想定しています。
-
-## ソース
-
-- [完全なFlutterプロジェクトZIP](https://github.com/akari828-prog/nearby-leisure-finder-demo/blob/main/nearby_leisure_finder_flutter.zip)
-- [スマホ向け手順](https://github.com/akari828-prog/nearby-leisure-finder-demo/blob/main/README_PHONE_JA.md)
-- [ビルド設定と費用の説明](https://github.com/akari828-prog/nearby-leisure-finder-demo/blob/main/README_FREE_BUILD_JA.md)
-- [APKビルド履歴](https://github.com/akari828-prog/nearby-leisure-finder-demo/actions/workflows/build-apk.yml)
+完全なFlutterプロジェクトは [nearby_leisure_finder_flutter.zip](https://github.com/akari828-prog/nearby-leisure-finder-demo/blob/main/nearby_leisure_finder_flutter.zip) です。実行、RSS、広告の設定は [日本語README](README_JA.md)、スマートフォンの手順は [README_PHONE_JA.md](README_PHONE_JA.md) を参照してください。
