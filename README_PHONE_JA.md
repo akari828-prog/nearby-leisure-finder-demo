@@ -1,74 +1,49 @@
-# PCなし・課金なしでAndroidに入れる手順
+# スマホだけで実検索版をインストールする手順
 
-デモAPKを生成して公開しました。flutter pub get、flutter analyze、flutter build apk --release、APK署名検証は成功しています。実機での起動確認とFirebaseを使う実検索はこれからです。
+## 今すぐ入れる
 
-ダウンロードページ：https://github.com/akari828-prog/nearby-leisure-finder-demo/releases/tag/android-mock-37264135261-1
+[実検索版APK（Android live build 6）を開く](https://github.com/akari828-prog/nearby-leisure-finder-demo/releases/tag/android-live-37393697758-1)
 
-ページの Assets にある **nearby-leisure-mock.apk** をスマホで開いてください。
+このAPKは50.3 MBです。SHA-256: `c34ba49f85f5bdba0b63753e201ccf3de007a61b45c135f0ba3c46b922685724`
 
-## 最初の確認
-
-ユーザーの許可を得て公開リポジトリを作成し、標準ランナーでビルドしました。アプリの完全なソースZIPと端末確認用APKは公開されています。
-
-リポジトリ：https://github.com/akari828-prog/nearby-leisure-finder-demo
-
-Firebaseプロジェクト **Nearby Leisure Finder**（ID: **nearby-leisure-finder**）をSparkプランで作成しました。Androidアプリ **jp.example.nearbyleisurefinder** と固定署名のSHA-1・SHA-256を登録済みです。固定署名鍵はGitHubの非公開Repository secret **ANDROID_DEBUG_KEYSTORE_BASE64** に登録しました。
-
-実検索版には、Gemini API追加利用規約とPlay Integrity API利用規約への本人の同意、および **google-services.json** が必要です。このブラウザでは設定ファイルのダウンロードが完了しなかったため、スマホのFirebase設定画面から取得してChatGPTへ添付できます。Google Cloudコンソールもこのブラウザからは利用できませんでした。補助Webアプリの登録は行っていません。
-
-GitHubの有料ランナー、Codespaces、Actionsのキャッシュや成果物ストレージは使いません。
-
-## 無料のGeminiで実際のイベントを検索する準備
-
-1. スマホのブラウザで https://console.firebase.google.com/ を開きます。
-2. このアプリ用にFirebaseプロジェクトを作成し、無料の **Sparkプラン** を維持します。Cloud Billingの請求先アカウントを紐付けず、支払い方法を登録しません。
-3. プロジェクトにAndroidアプリを追加します。パッケージ名は **jp.example.nearbyleisurefinder** です。表示名は **近くで、ちょっと遊ぼう。** にできます。
-4. Androidアプリ登録後の **google-services.json** をダウンロードします。このファイルをChatGPTへ添付すれば、Firebase登録情報をクラウドビルドへ設定できます。パスワード、Gemini APIキー、サービスアカウント秘密鍵は不要です。
-5. Firebase Consoleで **Firebase AI Logic** を開始し、バックエンドは **Gemini Developer API** を選びます。有料のバックエンドやBlazeプランへの変更は選びません。モデルは **gemini-3.5-flash-lite** を使います。
-6. FirebaseのAndroidアプリ設定と **App Check** に次の公開署名フィンガープリントを登録します。これは、このアプリ用に準備した固定の端末確認用署名鍵の情報です。
-
-   **SHA-1**
-
-   ~~~text
-   54:EE:91:10:BA:67:5C:ED:D1:1E:B3:F2:E6:28:27:E0:34:1B:D2:36
-   ~~~
-
-   **SHA-256**
-
-   ~~~text
-   4B:A0:A8:D9:E7:14:3A:E5:F5:93:9B:BB:44:58:B7:8A:57:C1:C1:9D:C7:2C:72:F4:D5:6F:72:1D:C8:B7:A9:95
-   ~~~
-
-最新のデモAPK（ビルド5）は上記の固定鍵で署名しました。apksignerで証明書の一致を確認しています。ビルド4のデモAPKは一時的な別の署名鍵を使っているため、ビルド4をインストール済みの場合は、先にアンインストールしてからビルド5を入れてください。これから生成する実検索APKにも同じ固定鍵を使います。
-
-7. App CheckのAndroidプロバイダは **Play Integrity** を使います。APKを直接配布する場合は、公式資料の「Google Play以外に限定」に合わせ、**PLAY_RECOGNIZED不要、LICENSED不要、デバイスの完全性を要求**する設定を使います。Google Play Console側でのAPI・Cloudプロジェクトの設定が必要になる場合があります。無料での設定が完了しない場合は、課金手続きをせず、その画面で停止して確認します。
-8. 今回のFirebase AI Logic開始画面では、App Checkが自動的に適用されると表示されています。実検索前にPlay Integrityプロバイダ登録を完了し、実機からApp Checkの有効なリクエストが届くことを確認します。公開配布前に未登録端末からのアクセスが拒否されることも確認します。
-
-FirebaseのAndroid APIキーはFirebaseプロジェクトの識別情報で、サービスアカウント秘密鍵やGemini APIキーとは異なります。このアプリはGemini APIキーをDartへ埋め込みません。Firebaseの設定ファイルはGitHub Secretsで渡し、ソースへコミットしません。
-
-Gemini APIの利用規約では18歳以上向けの利用が求められます。無料枠で送信したRSS情報とAIの回答は、Googleの製品改善や学習、人による確認の対象となる場合があります。このアプリがGeminiへ送るのは公開RSSのイベント情報です。ユーザーの現在地の緯度・経度は送信しません。
-
-## ビルドからインストール
-
-Firebase設定前でも、mockモードで表示・距離・広告・ブラウザ遷移を確認するAPKを作れます。実際の検索にはFirebaseとApp Checkの設定が必要です。
-
-Firebaseの設定後にActionsの **Build free Android APK** を **live** で実行します。依存取得、静的解析、APK生成が順番に実行されます。失敗した場合はエラーログを確認して修正し、ビルドが成功してからAPKを案内します。
-
-1. GitHub Releasesにある **nearby-leisure-live.apk** をスマホにダウンロードします。デモ版は **nearby-leisure-mock.apk** です。
-2. ダウンロードしたAPKを開きます。
-3. Androidが求めた場合だけ、APKを開いたアプリに「この提供元のアプリを許可」のインストール権限を付けます。
-4. 「インストール」を押します。
+1. Androidスマートフォンで上のリンクを開き、Assetsから **nearby-leisure-live.apk** をタップします。
+2. ダウンロードが終わったら、ブラウザーの「開く」を押すか、「ファイル」アプリのダウンロード一覧からAPKを開きます。
+3. Androidが確認を出した場合だけ、APKを開いたブラウザーまたはファイルアプリに「この提供元のアプリを許可」を設定します。
+4. インストール画面で「インストール」を押します。
 5. アプリを起動し、「現在地から探す」を押した時に位置情報を許可します。
 
-アプリは常時・バックグラウンドの位置取得を行いません。Geminiへ現在地の緯度・経度は送りません。無料枠の上限に達したら検索エラーとなり、再検索できます。課金プランへの自動切り替えはありません。
+位置情報は検索時だけ取得します。バックグラウンドでは取得しません。Geminiには位置情報を送らず、現在地からの距離は端末で計算します。
 
-## 公式資料
+ビルド5のデモAPKとビルド6は同じ署名鍵なので、そのまま更新できます。ビルド4のAPKだけは別鍵で署名されています。ビルド4を使っている場合は、いったんアンインストールしてからビルド6を入れてください。
 
-確認日：2026年10月5日。
+## 完了した設定
 
-- Firebase AI Logicの無料枠：https://firebase.google.com/docs/ai-logic/pricing?hl=ja
-- Geminiのモデル別料金：https://ai.google.dev/gemini-api/docs/pricing
-- FirebaseのAPIキー：https://firebase.google.com/docs/projects/api-keys?hl=ja
-- Play IntegrityとApp Check：https://firebase.google.com/docs/app-check/android/play-integrity-provider?hl=ja
-- GitHub Actionsの料金：https://docs.github.com/en/billing/concepts/product-billing/github-actions
-- GitHub Releases：https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases
+- Firebaseプロジェクト **nearby-leisure-finder** はSparkプラン（無料）です。Cloud Billingの請求先、支払い方法は登録していません。
+- Firebase AI Logicで無料の **Gemini Developer API** を有効化しました。任意のAI Monitoringはオフです。モデルは `lib/config/ai_config.dart` の `gemini-3.5-flash-lite` です。
+- Firebase App CheckのAndroidプロバイダを **Play Integrity** に登録しました。Google Play経由でないAPKに合わせて **PLAY_RECOGNIZED** と **LICENSED** は必須にせず、デバイスの完全性は要求します。
+- SHA-256署名フィンガープリントは、APK署名検証結果とFirebase登録値が一致しています。
+- SDKの設定取得用に同じFirebaseプロジェクトへ「SDK設定取得用」Webアプリを登録しました。Firebase Hostingは有効にしていません。
+- Firebaseのビルド設定と署名鍵はGitHubの非公開Actions Secretsに保存し、公開ソースには含めていません。Gemini APIキーやサービスアカウント鍵は使っていません。
+
+## ビルド検証
+
+GitHub Actionsで **flutter pub get**、**flutter analyze**、実検索版 **flutter build apk --release**、APK署名検証、GitHub Releasesへの公開が成功しました。実機へのインストールと起動確認はまだできていません。
+
+APK署名情報:
+
+~~~text
+SHA-1   54:EE:91:10:BA:67:5C:ED:D1:1E:B3:F2:E6:28:27:E0:34:1B:D2:36
+SHA-256 4B:A0:A8:D9:E7:14:3A:E5:F5:93:9B:BB:44:58:B7:8A:57:C1:C1:9D:C7:2C:72:F4:D5:6F:72:1D:C8:B7:A9:95
+~~~
+
+## 料金とAIデータ
+
+Firebaseプロジェクトに請求先を登録していないため、Geminiの無料枠上限に達した場合は検索エラーになります。無料枠には回数制限があり、課金プランへ自動切り替えしません。広告はGoogle公式テスト広告IDを使います。
+
+無料枠では送信したRSS本文とAI応答がGoogleの確認や製品改善の対象になることがあります。Gemini APIの利用条件に合わせ、このアプリは18歳以上向けとして扱ってください。GeminiにはRSS由来のイベント情報だけを送り、位置情報・緯度・経度は送りません。
+
+## ソースと手順
+
+- [Flutterプロジェクトの完全なソースZIP](https://github.com/akari828-prog/nearby-leisure-finder-demo/blob/main/nearby_leisure_finder_flutter.zip)
+- [ビルドと無料設定の説明](https://github.com/akari828-prog/nearby-leisure-finder-demo/blob/main/README_FREE_BUILD_JA.md)
+- [GitHubリポジトリ](https://github.com/akari828-prog/nearby-leisure-finder-demo)
